@@ -21,7 +21,7 @@ class CommandDelayer @Inject constructor(val logger: Logger) {
     companion object {
         const val ID = "commanddelayer"
         const val NAME = "CommandDelayer"
-        const val VERSION = "0.1"
+        const val VERSION = "0.1.1"
         const val AUTHOR = "RandomByte"
 
         const val DELAY_ARGUMENT = "secondsDelay"
@@ -31,6 +31,7 @@ class CommandDelayer @Inject constructor(val logger: Logger) {
     @Listener
     fun onInit(event: GameInitializationEvent) {
         Sponge.getCommandManager().register(this, CommandSpec.builder()
+                .permission("commanddelayer")
                 .arguments(
                         GenericArguments.integer(DELAY_ARGUMENT.toText()),
                         GenericArguments.remainingJoinedStrings(COMMAND_ARGUMENT.toText()))
