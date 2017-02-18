@@ -1,0 +1,50 @@
+plugins {
+    id "com.zoltu.kotlin" version "1.0.6"
+    id "com.qixalite.spongestart" version "1.6.0"
+    id "com.github.johnrengelman.shadow" version "1.2.4"
+}
+
+group "de.randombyte"
+version "0.1"
+
+repositories {
+    jcenter()
+    maven { url "https://repo.spongepowered.org/maven/" }
+    maven { url "https://jitpack.io" }
+}
+
+spongestart {
+    eula true
+    SpongeVanillaVersion = "1.10.2-5.1.0-BETA-371"
+}
+
+ext.spongeApiVersion = "5.0.0"
+ext.kotlinVersion = "1.0.6"
+
+configurations {
+    compile.extendsFrom shadow
+}
+
+dependencies {
+    shadow "org.jetbrains.kotlin:kotlin-runtime:$kotlinVersion"
+    shadow "org.jetbrains.kotlin:kotlin-stdlib:$kotlinVersion"
+    compile "org.spongepowered:spongeapi:$spongeApiVersion"
+    kapt "org.spongepowered:spongeapi:$spongeApiVersion"
+    shadow("com.github.randombyte-developer.kosp:kosp:v0.3.10.3") {
+        transitive = false
+    }
+}
+
+jar.enabled = false
+
+shadowJar {
+    configurations = [project.configurations.shadow]
+
+    exclude "StartServer*.*"
+
+    relocate "kotlin", "de.randombyte.commanddelayer.internal.kotlin"
+    relocate "de.randombyte.kosp", "de.randombyte.commanddelayer.internal.kosp"
+
+    classifier = null // Remove '-all' suffix from output file name
+}
+build.dependsOn shadowJar
