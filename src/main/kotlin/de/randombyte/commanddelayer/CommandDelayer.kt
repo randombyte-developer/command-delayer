@@ -1,6 +1,7 @@
 package de.randombyte.commanddelayer
 
 import com.google.inject.Inject
+import de.randombyte.kosp.config.serializers.duration.SimpleDurationTypeSerializer
 import de.randombyte.kosp.extensions.toText
 import org.slf4j.Logger
 import org.spongepowered.api.Sponge
@@ -21,10 +22,10 @@ class CommandDelayer @Inject constructor(val logger: Logger) {
     companion object {
         const val ID = "commanddelayer"
         const val NAME = "CommandDelayer"
-        const val VERSION = "0.1.1"
+        const val VERSION = "1.0"
         const val AUTHOR = "RandomByte"
 
-        const val DELAY_ARGUMENT = "secondsDelay"
+        const val DELAY_ARGUMENT = "delay"
         const val COMMAND_ARGUMENT = "command"
     }
 
@@ -33,16 +34,23 @@ class CommandDelayer @Inject constructor(val logger: Logger) {
         Sponge.getCommandManager().register(this, CommandSpec.builder()
                 .permission("commanddelayer")
                 .arguments(
-                        GenericArguments.integer(DELAY_ARGUMENT.toText()),
+                        GenericArguments.string(DELAY_ARGUMENT.toText()),
                         GenericArguments.remainingJoinedStrings(COMMAND_ARGUMENT.toText()))
                 .executor { src, ctx ->
-                    val delay = ctx.getOne<Int>(DELAY_ARGUMENT).get()
+                    val delayDurationString = ctx.getOne<String>(DELAY_ARGUMENT).get()
                     val command = ctx.getOne<String>(COMMAND_ARGUMENT).get()
 
-                    if (delay < 1) throw CommandException(("'$DELAY_ARGUMENT' must be positive!").toText())
+                    val legacyFormatSeconds = delayDurationString.toIntOrNull()
+                    val delayMilliseconds = if (legacyFormatSeconds != null) {
+                        legacyFormatSeconds * 1000L
+                    } else {
+                        SimpleDurationTypeSerializer.deserialize(delayDurationString).toMillis()
+                    }
+
+                    if (delayMilliseconds < 1) throw CommandException(("'$DELAY_ARGUMENT' must be positive!").toText())
 
                     Task.builder()
-                            .delay(delay.toLong(), TimeUnit.SECONDS)
+                            .delay(delayMilliseconds, TimeUnit.MILLISECONDS)
                             .execute { -> Sponge.getCommandManager().process(src, command) }
                             .submit(this)
 
